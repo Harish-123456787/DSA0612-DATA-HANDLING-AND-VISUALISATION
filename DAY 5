@@ -1,0 +1,126 @@
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(reshape2)
+library(scales)
+library(plotly)
+library(tibble)
+
+# 1. Load Data
+data <- read.csv("path_to_your_dataset.csv")
+
+# 2. Data Cleaning
+# Remove NA values
+data <- na.omit(data)
+
+# Remove duplicates
+data <- distinct(data)
+
+# Format dates (assuming there's a date column)
+data$Date <- as.Date(data$Date, format="%Y-%m-%d")
+
+# 3. Data Processing
+# Add a month column
+data$Month <- format(data$Date, "%Y-%m")
+
+# 4. Sales Analysis over the region
+region_sales <- data %>%
+  group_by(Region) %>%
+  summarise(Total_Sales = sum(Sales))
+
+# Plot region sales
+ggplot(region_sales, aes(x=Region, y=Total_Sales, fill=Region)) +
+  geom_bar(stat="identity") +
+  theme_minimal() +
+  labs(title="Sales by Region")
+
+# 5. Sales analysis over a month
+monthly_sales <- data %>%
+  group_by(Month) %>%
+  summarise(Total_Sales = sum(Sales))
+
+# Plot monthly sales
+ggplot(monthly_sales, aes(x=Month, y=Total_Sales, group=1)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(title="Monthly Sales")
+
+# 6. Sales analysis based on total sales
+total_sales <- sum(data$Sales)
+
+# 7. Analysis based on number of customers over the month
+monthly_customers <- data %>%
+  group_by(Month) %>%
+  summarise(Total_Customers = n_distinct(CustomerID))
+
+# Plot number of customers over months
+ggplot(monthly_customers, aes(x=Month, y=Total_Customers)) +
+  geom_bar(stat="identity", fill="blue") +
+  theme_minimal() +
+  labs(title="Number of Customers by Month")
+
+# 8. Calculate the Mean, Median, and Standard Deviation over the average transaction value
+avg_transaction_value <- data$Sales / data$Transactions
+mean_avg_trans_value <- mean(avg_transaction_value)
+median_avg_trans_value <- median(avg_transaction_value)
+sd_avg_trans_value <- sd(avg_transaction_value)
+
+# 9. Find the trendline based on the sales
+sales_trend <- lm(Total_Sales ~ as.numeric(Month), data=monthly_sales)
+ggplot(monthly_sales, aes(x=as.numeric(Month), y=Total_Sales)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE) +
+  theme_minimal() +
+  labs(title="Sales Trendline")
+
+# 10. Find the seasonal sales in each region
+data$Season <- ifelse(month(data$Date) %in% c(12, 1, 2), "Winter",
+                      ifelse(month(data$Date) %in% c(3, 4, 5), "Spring",
+                             ifelse(month(data$Date) %in% c(6, 7, 8), "Summer", "Fall")))
+
+seasonal_sales <- data %>%
+  group_by(Region, Season) %>%
+  summarise(Total_Sales = sum(Sales))
+
+# Plot seasonal sales by region
+ggplot(seasonal_sales, aes(x=Season, y=Total_Sales, fill=Region)) +
+  geom_bar(stat="identity", position="dodge") +
+  theme_minimal() +
+  labs(title="Seasonal Sales by Region")
+
+# 11. Visualize the region-based sales over the number of customers
+region_customers <- data %>%
+  group_by(Region) %>%
+  summarise(Total_Customers = n_distinct(CustomerID))
+
+region_sales_customers <- merge(region_sales, region_customers, by="Region")
+
+# 3D Visualization of Sales and Customers
+plot_ly(region_sales_customers, x = ~Total_Customers, y = ~Total_Sales, z = ~Region, type = 'scatter3d', mode = 'markers')
+
+# 12. Visualize a minimum of 25 plots
+# Additional plots can include:
+# - Sales distribution by product categories
+# - Average sales per transaction by region
+# - Monthly sales growth rate
+# - Customer count by region
+# - Daily sales trends
+# - Sales by hour of the day
+# - Sales per store
+# - Heatmap of sales by product and region
+# - Customer segmentation plots
+
+# Example of additional plot: Sales distribution by product categories
+category_sales <- data %>%
+  group_by(Category) %>%
+  summarise(Total_Sales = sum(Sales))
+
+ggplot(category_sales, aes(x=Category, y=Total_Sales, fill=Category)) +
+  geom_bar(stat="identity") +
+  theme_minimal() +
+  labs(title="Sales Distribution by Product Categories")
+
+# Additional plots can be added similarly, ensuring a minimum of 25 unique visualizations.
