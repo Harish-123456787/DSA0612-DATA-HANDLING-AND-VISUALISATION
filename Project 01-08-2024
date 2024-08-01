@@ -1,0 +1,53 @@
+# Load necessary libraries
+library(plotly)
+library(ggplot2)
+
+# 1. Load Data
+data <- data.frame(
+  CustomerID = 1:30,
+  Age = c(35, 28, 42, 25, 38, 45, 23, 34, 40, 30, 29, 50, 32, 47, 36, 27, 41, 33, 39, 26, 48, 31, 44, 37, 43, 24, 46, 49, 21, 22),
+  Gender = as.factor(c("Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female")),
+  PurchaseAmount = c(100, 80, 120, 90, 110, 150, 60, 130, 95, 85, 70, 160, 75, 140, 115, 65, 125, 135, 105, 95, 145, 90, 120, 125, 130, 85, 155, 140, 50, 60),
+  MembershipLevel = as.factor(c("Gold", "Silver", "Bronze", "Bronze", "Silver", "Gold", "Silver", "Gold", "Bronze", "Silver", "Bronze", "Gold", "Silver", "Bronze", "Gold", "Silver", "Bronze", "Gold", "Silver", "Bronze", "Gold", "Silver", "Bronze", "Gold", "Silver", "Bronze", "Gold", "Silver", "Bronze", "Silver"))
+)
+
+# 2. Data Cleaning
+summary(data)
+
+# 3. Data Processing
+data$PurchaseCategory <- cut(data$PurchaseAmount, breaks = c(0, 80, 100, 130, Inf), labels = c("Low", "Medium", "High", "Very High"))
+
+# 4. EDA Analysis
+summary(data)
+aggregate(PurchaseAmount ~ Age + Gender + MembershipLevel, data = data, FUN = mean)
+
+# 5. Visualization
+
+# 5.1 3D Scatter Plot
+fig <- plot_ly(data, x = ~Age, y = ~PurchaseAmount, z = ~MembershipLevel, color = ~Gender, colors = c('blue', 'pink'), type = 'scatter3d', mode = 'markers')
+fig <- fig %>% layout(scene = list(xaxis = list(title = 'Age'),
+                                   yaxis = list(title = 'Purchase Amount'),
+                                   zaxis = list(title = 'Membership Level')))
+fig
+
+# 5.2 Histogram of Purchase Amount by Gender
+ggplot(data, aes(x = PurchaseAmount, fill = Gender)) + 
+  geom_histogram(binwidth = 10, position = "dodge") +
+  labs(title = "Histogram of Purchase Amount by Gender", x = "Purchase Amount", y = "Count")
+
+# 5.3 Boxplot of Purchase Amount by Membership Level
+ggplot(data, aes(x = MembershipLevel, y = PurchaseAmount, fill = MembershipLevel)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot of Purchase Amount by Membership Level", x = "Membership Level", y = "Purchase Amount")
+
+# 5.4 Scatter plot of Age vs Purchase Amount colored by Gender
+ggplot(data, aes(x = Age, y = PurchaseAmount, color = Gender)) + 
+  geom_point() +
+  labs(title = "Scatter plot of Age vs Purchase Amount", x = "Age", y = "Purchase Amount")
+
+# 5.5 Bar plot of count of customers by Membership Level
+ggplot(data, aes(x = MembershipLevel, fill = MembershipLevel)) + 
+  geom_bar() +
+  labs(title = "Bar plot of Count of Customers by Membership Level", x = "Membership Level", y = "Count")
+
+# Additional plots can be created similarly by exploring other relationships and aspects of the dataset.
